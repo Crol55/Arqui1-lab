@@ -7,13 +7,13 @@ LedControl lc = LedControl(13,11,12,2);
 //======== Variables Globales
 snake *serpiente;
 unsigned long tiempo_snake = 0;
-int intervalo = 100; // movimiento del juego
+int intervalo = 500; // movimiento del juego
 // pines
 int pinArriba = 10;
 int pinAbajo = 8;
 int pinDerecha = 9;
 int pinIzquierda = 7;
-
+long randomNumber;
 
 void setup() {
   // put your setup code here, to run once:
@@ -60,12 +60,18 @@ void loop() {
   }
   
   if(millis() > tiempo_snake + intervalo){
+    
     tiempo_snake = millis();
+    bool generarVida;
     switch(direccionM){ // Que boton pulso
-      case 'U':{movArriba(serpiente);}break;
-      case 'R':{movDerecha(serpiente);}break;
-      case 'D':{movAbajo(serpiente);}break;
-      case 'L':{movIzquierda(serpiente);}break;
+      case 'U':{generarVida = movVertiacal(serpiente, 'U'); }break;
+      case 'R':{generarVida = movHorizontal(serpiente,'R');}break;
+      case 'D':{generarVida = movVertiacal(serpiente, 'D');}break;
+      case 'L':{generarVida = movHorizontal(serpiente,'L');}break;
+    }
+    if(generarVida){
+      Serial.println("si");
+      colocar_vida(serpiente);
     }   
   }
   
