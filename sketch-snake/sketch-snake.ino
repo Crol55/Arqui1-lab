@@ -5,15 +5,19 @@
 LedControl lc = LedControl(13,11,12,2);
 
 //======== Variables Globales
+// snake
 snake *serpiente;
 unsigned long tiempo_snake = 0;
-int intervalo = 500; // movimiento del juego
+int intervalo = 875; // movimiento del juego
+long randomNumber;
+
 // pines
 int pinArriba = 10;
 int pinAbajo = 8;
 int pinDerecha = 9;
 int pinIzquierda = 7;
-long randomNumber;
+// var del programa
+char modo_juego; // m:mensaje, s:snake
 
 void setup() {
   // put your setup code here, to run once:
@@ -35,69 +39,63 @@ void setup() {
  // ======== Inicializar variables del snake ==========
   direccionM = 'R'; // El movimiento inicial sera hacia la derecha (right)
   serpiente = new snake(); // Unica instancia del snake
+ // ======== Inicializar variables del programa =======
+  modo_juego = 'm'; // Inicia en modo mensaje.
 }
 
 
 void loop() {
   // put your main code here, to run repeatedly:
-  for(int i = 0; i < 16; i++)
-  {
-    if(i <8)
-      lc.setColumn(0,i,pantallaSnake[i]);
-    else
+  if(modo_juego == 'm'){
+    if(millis() > 1000){
+      modo_juego = 's';
+      randomSeed(millis()); // para que los enemigos sean RANDOM
+    }
+  }else{
+    for(int i = 0; i < 16; i++)
+    {
+      if(i <8)
+        lc.setColumn(0,i,pantallaSnake[i]);
+      else
       lc.setColumn(1,i-8,pantallaSnake[i]);
-  }
+    }
   
-  // leer direccion de movimient
-  if(digitalRead(pinArriba) && (direccionM != 'D')){
-    direccionM = 'U';// up
-  }else if(digitalRead(pinDerecha) && (direccionM != 'L')){
-    direccionM = 'R';// Right
-  }else if(digitalRead(pinAbajo) && (direccionM != 'U')){
-    direccionM = 'D'; // Down
-  }else if(digitalRead(pinIzquierda) && (direccionM != 'R')){
-    direccionM = 'L'; // Left
-  }
+    // leer direccion de movimient
+    if(digitalRead(pinArriba) && (direccionM != 'D'))
+      direccionM = 'U';// up
+    else if(digitalRead(pinDerecha) && (direccionM != 'L'))
+      direccionM = 'R';// Right
+    else if(digitalRead(pinAbajo) && (direccionM != 'U'))
+      direccionM = 'D'; // Down
+    else if(digitalRead(pinIzquierda) && (direccionM != 'R'))
+      direccionM = 'L'; // Left
   
-  if(millis() > tiempo_snake + intervalo){
+    if(millis() > tiempo_snake + intervalo){
     
-    tiempo_snake = millis();
-    bool generarVida;
-    switch(direccionM){ // Que boton pulso
-      case 'U':{generarVida = movVertiacal(serpiente, 'U'); }break;
-      case 'R':{generarVida = movHorizontal(serpiente,'R');}break;
-      case 'D':{generarVida = movVertiacal(serpiente, 'D');}break;
-      case 'L':{generarVida = movHorizontal(serpiente,'L');}break;
+      tiempo_snake = millis();
+      int estado = 0; // 0:El juego sigue normal, 1:Generar vida/comida, 2:El jugador perdio
+      switch(direccionM){ // Que boton pulso
+        case 'U':{estado = movVertical(serpiente, 'U'); }break;
+        case 'R':{estado = movHorizontal(serpiente,'R');}break;
+        case 'D':{estado = movVertical(serpiente, 'D');}break;
+        case 'L':{estado = movHorizontal(serpiente,'L');}break; //estado = movHorizontal(serpiente,'L'); movIzquierda(serpiente);
+      }
+      switch(estado){
+        case 1:{ 
+          
+          colocar_vida(serpiente); // implica que comio
+          intervalo = intervalo-5; // incrementar la velocidad del snake
+        }break;
+        case 2:{ // perdio el juego
+          Serial.println("Terminar juego");
+          //Serial.println(serpiente->get_comidaIngerida());
+          // Si desea volver a jugar debemos reiniciar todas las variables de snake y luego retornar al mensaje.
+          serpiente = new snake();
+          reiniciar_snake();
+          modo_juego = 'm';
+          
+        }break;
+      }  
     }
-    if(generarVida){
-      Serial.println("si");
-      colocar_vida(serpiente);
-    }   
-  }
-  
-  //nodo colita = serpiente->getCola();
-  //serpiente->update_cuerpo();
-  //Serial.println(colita.columna);
-  
- /* for(int fila =0; fila <8; fila++)
-  {
-    for(int col = 0; col <8; col++)
-    {
-      lc.setLed(0, fila, col, true);
-      delay(50);
-      lc.setLed(0, fila, col, false);
-      delay(50);
-    }
-  }*/
-
-  /*for(int fila =0; fila <8; fila++)
-  {
-    for(int col = 0; col <8; col++)
-    {
-      lc.setLed(1, fila, col, true);
-      delay(50);
-      lc.setLed(1, fila, col, false);
-      delay(50);
-    }
-  }*/
+  }  
 }

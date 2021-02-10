@@ -1,3 +1,7 @@
+//========== Variables globales ===
+byte pantallaSnake[16] = {0,0,0,0,0,0,0,16,16,0,0,0,16,0,0,0}; // matriz de 16 * 8, ( vista desde el punto de "BYTES")
+char direccionM; // indica la direccion actual del snake (izq,der..etc)
+
 
 class nodo{
   public:
@@ -10,8 +14,10 @@ class snake{
 
   private:
   nodo cuerpo_snake[256];
+  int comida_ingerida = 0;
   public:
   int longitud; // longitud del snake
+  
   snake()
   {
     nodo cola = {7,4};
@@ -43,12 +49,16 @@ class snake{
     cuerpo_snake[longitud] = nuevo; // insertamos una nueva cabeza al snake
     longitud++; // crece el snake
   }
+  void comio(){
+    comida_ingerida++;  
+  }
+  int get_comidaIngerida(){
+    return comida_ingerida;
+  }
   
 };
 
 
-byte pantallaSnake[16] = {0,0,0,0,0,0,0,16,16,0,0,0,0,0,0,0}; // matriz de 16 * 8, ( vista desde el punto de "BYTES")
-char direccionM; // indica la direccion actual del snake (izq,der..etc)
 
 
 byte set_vida_enColumna(byte columna_libre) // Busca el espacio vacio en la columna con espacio libre
@@ -67,6 +77,7 @@ byte set_vida_enColumna(byte columna_libre) // Busca el espacio vacio en la colu
   return columna_libre; // retornamos la columna modificada
 }
 
+
 void colocar_vida(snake *serpiente)
 {
     nodo cabeza = serpiente->getCabeza();
@@ -75,7 +86,7 @@ void colocar_vida(snake *serpiente)
 // ==== Buscar una columna libre =====
     //int col_libre = -1;
 // 1) Primero buscar un espacio libre usando random...
-    randomSeed((cabeza.columna + cabeza.fila));
+    
     int randomNumber = random(0,16);
     //Serial.println(randomNumber);
     byte col_random = pantallaSnake[randomNumber];
@@ -112,7 +123,6 @@ void colocar_vida(snake *serpiente)
 
 
 
-
 void borrarCola(int col, int fila) // borrar la cola de snake en la pantalla
 {
   byte byteCol = pantallaSnake[col]; // recuperar el byte donde esta la cola 
@@ -121,57 +131,70 @@ void borrarCola(int col, int fila) // borrar la cola de snake en la pantalla
 }
 
 
-bool movHorizontal(snake *serpiente, char dir) // dir = Right/Left
+int movHorizontal(snake *serpiente, char dir) // dir = Right/Left
 {
-  bool colision = false; // para indicar si colisiono
-  //===0) Determinar si debe moverse a la derecha o a la izquierda
+  int estado = 0; // para indicar si colisiono o murio
+  //=== 0) Determinar si debe moverse a la derecha o a la izquierda
   int d;
   if(dir == 'R') d = 1;
   else d = -1;
   //== 1) Recuperar cabeza y columna siguiente a donde se movera.
   nodo cabeza = serpiente -> getCabeza();
   int colSiguiente = cabeza.columna + d; // -1: izquierda, +1 Derecha
-  if(colSiguiente>15)Serial.println("Murio");
+  // == 1.1) Verificar si se salio de la pantalla (murio)
+  if(colSiguiente>15 || colSiguiente<0){
+    estado = 2; // murio
+    return estado;  
+  }
   byte nuevo = pantallaSnake[colSiguiente]; // la columna donde deseamos colocar la nueva cabeza del snake.
   //== 2) Verificar si hubo colision ( vida o a si mismo)
-  if( bitRead(nuevo,cabeza.fila) ){
+  if( bitRead(nuevo,cabeza.fila) ){ // comio o choco con su cola?
+
+    serpiente->comio(); 
     serpiente->insertar(colSiguiente, cabeza.fila);
     bitWrite(nuevo, cabeza.fila, 1 );
     pantallaSnake[colSiguiente] = nuevo; //actualizar matriz 
-    colision = true;
+    estado = 1;
        
   }else{ // movimiento sin colision
     // actualizar la cola del snake
     nodo viejaCola = serpiente->getCola();
     borrarCola(viejaCola.columna, viejaCola.fila); // borrar de la pantalla
     serpiente->update_cuerpo();
+    nuevo = pantallaSnake[colSiguiente];
     bitWrite(nuevo, cabeza.fila, 1 );
     pantallaSnake[colSiguiente] = nuevo; //actualizar matriz
     // actualizar la cabeza de la snake
     cabeza.columna = colSiguiente;
     serpiente->setCabeza(cabeza);
   } 
-  return colision;
+  return estado;
 }
 
 
-bool movVertiacal(snake *serpiente, char dir)
+int movVertical(snake *serpiente, char dir)
 {
-  bool colision = false; // para indicar si colisiono
+  int estado = 0; // para indicar si colisiono o murio
   nodo cabeza = serpiente -> getCabeza();
   byte nuevo = pantallaSnake[cabeza.columna];
   int fila_sig;
   if(dir == 'U')
     fila_sig = cabeza.fila+1;
   else 
-  fila_sig = cabeza.fila-1;
+    fila_sig = cabeza.fila-1;
+    
+  if(fila_sig>7 || fila_sig<0){
+    estado = 2; // murio
+    return estado;  
+  }
   
   if(bitRead(nuevo,fila_sig)){ // detectar colision
-    
+
+    serpiente->comio();
     serpiente->insertar(cabeza.columna, fila_sig);
     bitWrite(nuevo, fila_sig, 1 );
     pantallaSnake[cabeza.columna] = nuevo; //actualizar matriz 
-    colision = true;
+    estado = 1;
     
   }else{
     nodo viejaCola = serpiente->getCola();
@@ -184,7 +207,15 @@ bool movVertiacal(snake *serpiente, char dir)
     cabeza.fila = fila_sig;
     serpiente-> setCabeza(cabeza); 
   }
-  return colision;
+  return estado;
+}
+
+void reiniciar_snake()
+{         
+  byte reinicio[16] = {0,0,0,0,0,0,0,16,16,0,0,0,16,0,0,0};
+  for(int i=0; i<16; i++) 
+      pantallaSnake[i]= reinicio[i]; 
+  direccionM = 'R'; // indica la direccion actual del snake (izq,der..etc) 
 }
 /*
 void movIzquierda(snake *serpiente)
