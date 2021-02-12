@@ -37,8 +37,12 @@ void movderecha()
  //  Desplazar texto manualmente hacia la derecha
   pantalla.borrar();
   for(int i=-80; i<30; i++){  
-    pantalla.escribirFrase("SECCION A*", i); // Texto, posicion en la pantalla
-    
+    pantalla.escribirFrase("SECCION A*", i); // Texto, posicion en la pantalla 
+          
+ if (digitalRead(3) == HIGH) {
+  pantalla.borrar();
+  i = 30;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
@@ -60,6 +64,10 @@ void movderecha()
   pantalla.borrar();
   for(int i=-65; i<30; i++){
     pantalla.escribirFrase("GRUPO17", i); // Texto, posicion en la pantalla
+     if (digitalRead(3) == HIGH) {
+  pantalla.borrar();
+  i = 30;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
@@ -79,7 +87,11 @@ void movderecha()
  if (digitalRead(3) != HIGH) {
     pantalla.borrar();
   for(int i=-30; i<30; i++){
-    pantalla.escribirFrase("*TP1", i); // Texto, posicion en la pantalla
+    pantalla.escribirFrase("*TP1", i); // Texto, posicion en la pantalla   
+     if (digitalRead(3) == HIGH) {
+  pantalla.borrar();
+  i = 30;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
@@ -100,6 +112,10 @@ void movizquierda()
   pantalla.borrar();
   for(int i = 30; i > -50; i--){
     pantalla.escribirFrase("*TP1", i); // Texto, posicion en la pantalla
+     if (digitalRead(3) != HIGH) {
+  pantalla.borrar();
+  i = -50;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
@@ -122,6 +138,10 @@ if (digitalRead(3) == HIGH) {
   pantalla.borrar();
   for(int i = 30; i > -60; i--){
     pantalla.escribirFrase("GRUPO17", i); // Texto, posicion en la pantalla
+     if (digitalRead(3) != HIGH) {
+  pantalla.borrar();
+  i = -60;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
@@ -143,6 +163,10 @@ if (digitalRead(3) == HIGH) {
     pantalla.borrar();
   for(int i = 30; i > -75; i--){
     pantalla.escribirFrase("SECCION A*", i); // Texto, posicion en la pantalla
+     if (digitalRead(3) != HIGH) {
+  pantalla.borrar();
+  i = -75;
+ }
     if (digitalRead(1) == HIGH) {
     delay(10);
     }else {
