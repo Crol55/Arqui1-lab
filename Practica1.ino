@@ -79,7 +79,6 @@ void loop()
   }
   else
   {
-    tiempoTranscurrido = 0;
     start();
   }
 }
@@ -954,4 +953,14 @@ void guionder()
     delay(500);
   }
   pantalla.borrar();
+}
+void mostrarpuntaje(int puntaje){
+
+  pantalla.borrar();
+  pantalla.escribirFraseScroll(puntaje,200);
+}
+void mostrarGM(){
+
+  pantalla.borrar();
+  pantalla.escribirFraseScroll("GM", 100);
 }
